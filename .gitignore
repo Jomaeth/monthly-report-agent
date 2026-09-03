@@ -1,0 +1,22 @@
+# generated outputs (regenerable from the tools)
+outputs/*
+!outputs/.gitkeep
+.tmp/
+*.log
+
+# secrets / local env
+.env
+.env.*
+!.env.example
+
+# OS / editor / cache
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.claude/
+.codex/

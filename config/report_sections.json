@@ -1,0 +1,75 @@
+{
+  "brand": {
+    "name": "OpenDeedigital",
+    "short_name": "ODD",
+    "logo_path": "brand_assets/ODD Logo.png",
+    "primary_color": "#F36B15",
+    "secondary_color": "#9B0A68",
+    "accent_color": "#C83D3D",
+    "dark_color": "#231F20",
+    "light_color": "#FFF7F0"
+  },
+  "report": {
+    "title": "Construction Project Monthly Health Report",
+    "status_label": "Draft with blockers",
+    "output_root": "outputs/monthly_report"
+  },
+  "email": {
+    "enabled": true,
+    "mode": "draft_only",
+    "from_name": "OpenDeedigital Project Controls",
+    "from_email": "project.controls@example.com",
+    "default_to": [],
+    "default_cc": [],
+    "subject_template": "[Draft Review] {project_id} Monthly Project Health Report - {period}",
+    "attach_pdf": true,
+    "attach_markdown": false,
+    "attach_metrics_json": false,
+    "require_no_blockers_for_send": true,
+    "require_send_approved_flag": true
+  },
+  "sections": [
+    "executive_summary",
+    "data_quality_and_review_gates",
+    "progress_by_zone_trade",
+    "programme_and_milestones",
+    "submission_rfi_bottlenecks",
+    "procurement_delivery_risk",
+    "safety_quality",
+    "commercial_cost",
+    "risk_action_decision_log",
+    "appendix_metrics"
+  ],
+  "charts": [
+    {
+      "id": "progress_by_zone",
+      "title": "Planned vs Actual Progress by Zone",
+      "filename": "progress_by_zone.png"
+    },
+    {
+      "id": "milestone_delay",
+      "title": "Milestone Delay Days",
+      "filename": "milestone_delay.png"
+    },
+    {
+      "id": "rfi_aging",
+      "title": "RFI / Submission Aging",
+      "filename": "rfi_aging.png"
+    },
+    {
+      "id": "procurement_variance",
+      "title": "Procurement Delivery Variance",
+      "filename": "procurement_variance.png"
+    },
+    {
+      "id": "commercial_movement",
+      "title": "Commercial KPI Movement",
+      "filename": "commercial_movement.png"
+    },
+    {
+      "id": "rag_mix",
+      "title": "RAG Mix by Workstream",
+      "filename": "rag_mix.png"
+    }
+  ]
+}

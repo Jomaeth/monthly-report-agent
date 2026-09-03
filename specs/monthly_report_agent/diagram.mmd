@@ -1,0 +1,48 @@
+flowchart TD
+    X[(8-sheet Excel Data Pack)]
+    PREV[(Previous month report)]
+    DICT[(Metric dictionary + RAG thresholds)]
+
+    X --> L1[Load workbook]
+    L1 --> V1[Validate columns + missing values + formula errors]
+    V1 --> Q1{Data Quality Gate: 0 blockers?}
+    Q1 -. fail .-> X
+    Q1 -- pass --> N1[Normalize status labels]
+    N1 --> K1[Calculate KPI: progress, delay, RFI, procurement, safety, GP, cashflow]
+    DICT --> K1
+    K1 --> R1[Apply RAG status]
+    R1 --> CH[Generate charts: progress, milestone, RFI aging, commercial]
+    R1 --> SUM[Generate Director / PM / QS narratives]
+    PREV --> SUM
+    CH --> RND[Render Markdown / HTML / PDF draft]
+    SUM --> RND
+    RND --> CHK[Generate human review checklist]
+
+    CHK --> G1{Construction Mgr: Red progress has recovery action?}
+    G1 -- pass --> G2{Planner: critical-path delay flagged?}
+    G1 -. stop .-> K1
+    G2 -- pass --> G3{Technical Mgr: overdue RFI escalated?}
+    G2 -. stop .-> K1
+    G3 -- pass --> G4{Procurement Mgr: long-lead risk shown?}
+    G3 -. stop .-> K1
+    G4 -- pass --> G5{Safety / QAQC: Red item has owner + evidence?}
+    G4 -. stop .-> K1
+    G5 -- pass --> G6{QS: GP / VO / cashflow numbers reconcile?}
+    G5 -. stop .-> K1
+    G6 -- pass --> G7{PM: narrative is fair and complete?}
+    G6 -. stop .-> K1
+    G7 -- pass --> G8{Director: approves Executive Dashboard?}
+    G7 -. stop .-> SUM
+    G8 -- approve --> O1[/Issued Monthly Report PDF/]
+    G8 -. stop .-> SUM
+    O1 --> O2[/Director Dashboard view/]
+    O1 --> O3[/PM Actions view/]
+    O1 --> O4[/QS Commercial view/]
+
+    classDef ai fill:#FFF7F0,stroke:#F36B15,stroke-width:2px,color:#231F20
+    classDef gate fill:#FFE9CC,stroke:#9B0A68,stroke-width:2px,color:#231F20
+    classDef io fill:#FFFFFF,stroke:#231F20,stroke-width:1px,color:#231F20
+
+    class L1,V1,N1,K1,R1,CH,SUM,RND,CHK ai
+    class Q1,G1,G2,G3,G4,G5,G6,G7,G8 gate
+    class X,PREV,DICT,O1,O2,O3,O4 io
