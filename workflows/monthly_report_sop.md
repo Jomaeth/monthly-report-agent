@@ -75,7 +75,7 @@ Generate a branded OpenDeedigital monthly construction project health report fro
 - Commercial, EOT, VO, RFI, and claim-sensitive wording: require PM/QS or technical review before publishing.
 - Email distribution: never send when `Draft with blockers` unless a human deliberately overrides the gate.
 - Visual QA failure: when chart labels clip / overlap / become unreadable, the Visual QA gate must fail and block send. Re-render after fixing chart code, then re-run Visual QA. Override only with documented human eye-check via `--override-visual-qa`.
-- Visual QA offline: when the projection laptop has no internet (e.g., teaching demos), run `tools/visual_qa_report.py --simulate` for reproducible findings, or `--dry-run` to print the prompt without an API call.
+- Visual QA offline: when there is no internet access, run `tools/visual_qa_report.py --simulate` for reproducible findings, or `--dry-run` to print the prompt without an API call.
 
 ## Lessons Learned
 

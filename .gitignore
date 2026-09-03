@@ -20,3 +20,6 @@ __pycache__/
 .pytest_cache/
 .claude/
 .codex/
+input/*
+!input/.gitkeep
+!input/README.md

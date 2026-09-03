@@ -1526,7 +1526,7 @@ text-transform:uppercase;letter-spacing:0.6px;">Key Performance Indicators 路 闂
   on {html.escape(generated_at)}. All KPI values were recomputed by deterministic Python tools;
   none were authored by a free-text language model. Human review gates above must be cleared
   before external issue.</p>
-  <p>漏 OpenDeedigital 脳 HKIC 2026 路 AI2C Monthly Report Agent 路 Premium HTML edition</p>
+  <p>漏 OpenDeedigital 2026 路 Monthly Report Agent 路 Premium HTML edition</p>
 </div>
 
 </main>
@@ -1542,7 +1542,7 @@ text-transform:uppercase;letter-spacing:0.6px;">Key Performance Indicators 路 闂
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", default="demo-data/AI2C_Day2_Monthly_Report_Data_Pack_Demo.xlsx")
+    parser.add_argument("--input", default="input/AI2C_Day2_Monthly_Report_Data_Pack_Demo.xlsx")
     parser.add_argument("--period", default="2026-04")
     parser.add_argument("--output", default=None)
     parser.add_argument("--logo", default="brand_assets/ODD Logo.png")

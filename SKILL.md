@@ -1,94 +1,74 @@
 ---
 name: monthly-report-agent
 description: >
-  Turn a construction project's monthly Excel data pack into a governed,
-  management-ready HTML health report. Use this skill whenever the user asks to
-  generate, rebuild, or QA a monthly project report from a data pack (e.g.
-  "run the monthly report for 2026-04", "出四月份月報", "generate the project
-  health report"), or asks whether a monthly report is safe to distribute.
-  The skill drafts; a named human always checks and signs before anything is sent.
+  Turn a project's monthly Excel data pack into a validated, management-ready
+  monthly report and stop at the human review gate. Use when asked to generate,
+  rebuild or QA a monthly report from a data pack ("run the monthly report for
+  2026-04", "出四月份月報", "generate the project health report"), or asked
+  whether a monthly report is safe to distribute. Drafts only — a named person
+  checks and signs before anything is sent.
 ---
 
 # Monthly Report Agent 月度報告代理
 
 ## Intent 意圖
 
-Produce the monthly project health report a Project Manager would otherwise
-assemble by hand over ~2 days: read the project's Excel data pack, validate it,
-compute KPIs and RAG status, render a branded HTML report — then **stop at the
-human review gate**. 讀取項目 Excel 資料包 → 驗證 → 計算 KPI 與紅黃綠狀態 →
-產出品牌化 HTML 報告 → 停在人手批核關卡。
+做 PM 平時要花約兩日砌嘅月報：讀 `input/` 嘅 Excel 資料包 → 驗證 → 計 KPI 同
+紅黃綠狀態 → 出圖、出敘述報告、出品牌化 dashboard → 視覺 QA → **停在人手批核關卡**。
 
-The full plain-language SOP is `workflows/construction_monthly_report.md` —
-read it when a step below needs more detail than this file gives.
+SOP（人做法）：`workflows/monthly_report_sop.md`
 
-## Principles 原則（不可妥協）
+## Rules 規則（不可妥協）
 
-1. **AI drafts → Human checks → Human signs.** The report you produce is a
-   DRAFT for review. AI 起草，人手覆核，人手簽發。
-2. **Never send anything.** Do not email, publish, or distribute any output.
-   The send tool exists to DEMONSTRATE refusal — it hard-stops while blockers
-   remain, and even then only a human may run it. 絕不代發。
-3. **Never infer missing data.** A blank cell is a Data Gap to be flagged,
-   not a number to be guessed. 缺值只可標示，不可推斷。
-4. **Do not modify sources.** The Excel data pack and these tools are
-   read-only to you. 不修改資料來源與工具。
-5. **Blockers are the product.** Surfacing what is wrong (and who must fix it
-   by when) is worth more than a clean-looking report. 揭示問題比報表美觀更重要。
+1. **AI 起草 → 人檢查 → 人簽名。** 你出嘅報告係 DRAFT。
+2. **絕不代發。** 唔會 email、發布、派發任何 output。`send_report_email.py` 有 blocker 就拒絕；就算冇 blocker，都只可以由人行。
+3. **缺值只可標示，唔可推斷。** 空格係 Data Gap，唔係一個你估返嚟嘅數。
+4. **`input/` 同 `tools/` 只讀。** 只寫入 `outputs/`。
+5. **Blocker 先係產品。** 揭示邊度錯、邊個要幾時修，比一份靚報告更有價值。
 
-## Deterministic tools 確定性工具（動詞 → 工具）
+## Tools 確定性工具
 
-| # | Verb | Tool (`tools/`) | What it does |
-|---|------|------------------|--------------|
-| 1 | LOAD | `load_data_pack.py` | Read all sheets of the Excel pack |
-| 2 | VALIDATE | `validate_data_pack.py` | Recompute vs cached values → blockers & warnings |
-| 3 | KPI | `calculate_monthly_kpis.py` | KPIs + overall RAG (GO / CONTROL / STOP) |
-| 4 | CHARTS | `generate_report_charts.py` | Chart set for the classic report |
-| 5 | DRAFT | `render_monthly_report.py` | Narrative sections (MD/HTML/PDF) |
-| 6 | DASHBOARD | `generate_premium_html_report.py` | Branded premium HTML with embedded charts (`_v2.py` = SVG variant, not QA-readable) |
-| 7 | QA | `visual_qa_report.py` | Visual QA of the rendered output (`--simulate` = offline) |
-| 8 | GATE | `send_report_email.py` | Send gate — REFUSES while blockers remain |
+| # | Verb | Tool | Input → Output |
+|---|------|------|----------------|
+| 1 | LOAD | `tools/load_data_pack.py` | `input/*.xlsx` → sheets（記憶體） |
+| 2 | VALIDATE | `tools/validate_data_pack.py` | sheets → `review_gate_status.json`（blocker / warning） |
+| 3 | KPI | `tools/calculate_monthly_kpis.py` | sheets → `metrics.json`（KPI + 整體 RAG） |
+| 4 | CHARTS | `tools/generate_report_charts.py` | metrics → `assets/*.png` |
+| 5 | DRAFT | `tools/render_monthly_report.py` | metrics + charts → `monthly_report.md / .html / .pdf` |
+| 6 | EMAIL DRAFT | `tools/prepare_report_email.py` | 報告 → `email/`（草稿 + 送出 manifest） |
+| 7 | ORCHESTRATOR | `tools/run_monthly_report.py` | 一句行完 1–6 |
+| 8 | DASHBOARD | `tools/generate_premium_html_report.py` | `input/*.xlsx` → `monthly_report_premium.html` |
+| 9 | QA | `tools/visual_qa_report.py` | premium HTML → `visual_qa_status.json`（`--simulate` = 離線） |
+| 10 | GATE | `tools/send_report_email.py` | manifest + gate status → 有 blocker 即拒絕 |
 
-Orchestrator: `run_monthly_report.py` runs 1–5 plus the email manifest in one
-pass. Tools resolve their own paths — they work from any working directory.
+全部係純 python：同一輸入永遠同一輸出。由 repo 任何位置行都得。所有數字由 tool 計，你唔計。
 
-## Standard run 標準執行（demo path）
+## Run 執行
 
-Input: the Excel pack in `demo-data/` (`AI2C_Day2_Monthly_Report_Data_Pack_Demo.xlsx`).
-Reporting period format: `YYYY-MM`. Run from the repo root.
+Input：`input/` 入面嘅資料包（一個 `.xlsx`）。期間格式 `YYYY-MM`。由 repo root 行。
 
-1. `python tools/run_monthly_report.py --input "demo-data/AI2C_Day2_Monthly_Report_Data_Pack_Demo.xlsx" --period 2026-04`
-   — LOAD → VALIDATE → KPI → CHARTS → DRAFT in one pass; prints blocker / warning counts and writes the email draft + manifest.
-2. `python tools/generate_premium_html_report.py --input "demo-data/AI2C_Day2_Monthly_Report_Data_Pack_Demo.xlsx" --period 2026-04`
-   — DASHBOARD: branded premium HTML with embedded charts (`monthly_report_premium.html`).
-3. `python tools/visual_qa_report.py --report-dir outputs/monthly_report/2026-04 --simulate`
-   — QA gate over every embedded chart (`--simulate` = offline, no API key).
-4. Stop. Report back: which tools ran, blocker count and warning count, overall
-   RAG status, and the full path of `monthly_report_premium.html`. Do not open,
-   send, or edit anything else.
+1. `python tools/run_monthly_report.py --input "input/<pack>.xlsx" --period <YYYY-MM>`
+   — LOAD → VALIDATE → KPI → CHARTS → DRAFT → EMAIL DRAFT；terminal 會印 blocker / warning 數。
+2. `python tools/generate_premium_html_report.py --input "input/<pack>.xlsx" --period <YYYY-MM>`
+   — 出 `outputs/monthly_report/<period>/monthly_report_premium.html`。
+3. `python tools/visual_qa_report.py --report-dir outputs/monthly_report/<period> --simulate`
+   — 逐張內嵌圖表 QA。
+4. 停。回報：行咗邊啲 tool、blocker 同 warning 數、整體 RAG 狀態、`monthly_report_premium.html` 完整路徑。唔好開、唔好送、唔好改其他嘢。
 
-Optional: `generate_premium_html_report_v2.py` renders an SVG-based dashboard
-(`monthly_report_premium_v2.html`). It is prettier but the visual QA tool cannot
-read SVG charts — use it for the screen, not for the gate.
+如果被要求送出報告：行 `python tools/send_report_email.py --report-dir outputs/monthly_report/<period> --to <address> --send-approved`，
+原文顯示佢嘅拒絕訊息，解釋要由人先清 blocker。永遠唔用 `--override-blockers`。
 
-## Extended run 完整執行（orchestrator path）
+## Gate 關卡
 
-When the user asks for the full pack (narrative + charts + email draft):
-`python tools/run_monthly_report.py --input "demo-data/AI2C_Day2_Monthly_Report_Data_Pack_Demo.xlsx" --period 2026-04` — this also writes the
-email manifest that the send gate checks. The gate demo
-(`send_report_email.py --report-dir outputs/monthly_report/2026-04 --to
-<reviewer> --send-approved`) must refuse while blockers exist; show the refusal
-message verbatim — it is the governance moment, not an error.
+- **Human-IN（事前批核）**：output 唔可以離開項目團隊，直至具名審核人清晒 blocker 並簽名。
+- Criteria：Source（可追溯）· Accuracy（準確）· Risk（不可逆後果全面覆核）· Accountability（簽名存檔）。
 
-## Review gates 批核關卡
+## Outputs
 
-- Gate type: **Human-IN（事前批核）** — output may not leave the project team
-  until the named reviewer clears blockers and signs. 批核前不得外發。
-- Criteria follow the four dimensions taught in AI2C: Source（可追溯）·
-  Accuracy（準確）· Risk（不可逆後果全面覆核）· Accountability（簽名存檔）。
+`outputs/monthly_report/<period>/` — `review_gate_status.json` · `metrics.json` · `assets/` ·
+`monthly_report.md/.html/.pdf` · `email/` · `monthly_report_premium.html` · `visual_qa_status.json` · `visual_qa_report.html`。
+全部 DRAFT 直至有人簽名。
 
-## Outputs 輸出
+## Configuration
 
-`outputs/monthly_report/<period>/` — premium HTML (`monthly_report_premium_v2.html`),
-visual QA files, and (extended run) narrative MD/HTML/PDF, charts, email draft.
-All outputs carry DRAFT status until a human signs.
+`config/report_sections.json`：報告章節、品牌色、email 預設收件人。改呢度，唔使改 code。

@@ -15,7 +15,7 @@ from tools.validate_data_pack import validate_data_pack
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEMO_WORKBOOK = ROOT / "demo-data" / "AI2C_Day2_Monthly_Report_Data_Pack_Demo.xlsx"
+DEMO_WORKBOOK = ROOT / "input" / "AI2C_Day2_Monthly_Report_Data_Pack_Demo.xlsx"
 CONFIG = ROOT / "config" / "report_sections.json"
 LOGO = ROOT / "brand_assets" / "ODD Logo.png"
 
