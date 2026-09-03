@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from calendar import monthrange
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -652,6 +654,7 @@ def validate_data_pack(
     period: str | None = None,
     report_as_of: str | None = None,
     brand_logo_path: str | Path | None = None,
+    mode: str | None = None,
 ) -> dict[str, object]:
     issues: list[ValidationIssue] = []
     as_of = _derive_report_as_of(data_pack, period, report_as_of)
@@ -673,18 +676,36 @@ def validate_data_pack(
         _validate_quality_notes(data_pack, issues)
         _validate_safety_and_evidence(data_pack, issues)
 
+    # validation mode: "report" (default) records data problems as notes and never blocks the
+    # report; "strict" keeps them as blockers. Structural problems (missing sheet / column) always block.
+    mode = (mode or os.environ.get("MONTHLY_REPORT_MODE") or "report").lower()
+    data_notes = 0
+    if mode != "strict":
+        for issue in issues:
+            if issue.severity == "blocker" and issue.id not in {"MISSING_SHEET", "MISSING_COLUMN"}:
+                issue.severity = "warning"
+                issue.message = "[data note] " + issue.message
+                data_notes += 1
+
     gates = _build_review_gates(data_pack, issues)
+    if mode != "strict":
+        for gate in gates:                      # nothing blocks in report mode — reviewers still sign
+            if gate.get("status") == "Blocked":
+                gate["status"] = "Pending Review"
+                gate["blocker_count"] = 0
     issue_counts = {
         "blocker": sum(1 for issue in issues if issue.severity == "blocker"),
         "warning": sum(1 for issue in issues if issue.severity == "warning"),
         "info": sum(1 for issue in issues if issue.severity == "info"),
+        "data_note": data_notes,
     }
     has_blockers = issue_counts["blocker"] > 0 or any(gate["status"] == "Blocked" for gate in gates)
     return {
         "source_path": str(data_pack.source_path),
         "period": period,
         "report_as_of": as_of,
-        "report_status": "Draft with blockers" if has_blockers else "Draft pending review",
+        "validation_mode": mode,
+        "report_status": "Draft with blockers" if has_blockers else "Draft for review",
         "issue_counts": issue_counts,
         "issues": [asdict(issue) for issue in issues],
         "review_gates": gates,

@@ -108,11 +108,7 @@ def build_email_body(metrics: dict[str, object], config: dict[str, object]) -> t
     secondary = clean_text(brand.get("secondary_color"), "#9B0A68")
     dark = clean_text(brand.get("dark_color"), "#231F20")
 
-    status_warning = (
-        "This package is for review only. Do not issue externally until blockers and human review gates are cleared."
-        if "blocker" in ctx["status"].lower()
-        else "This package is ready for final human review before issue."
-    )
+    status_warning = "This package is a draft for named-reviewer sign-off. Do not issue externally until the review gates are signed off."
 
     text_lines = [
         f"{ctx['project_id']} Monthly Project Health Report - {ctx['period']}",

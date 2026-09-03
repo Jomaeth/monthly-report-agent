@@ -11,7 +11,7 @@
   },
   "report": {
     "title": "Construction Project Monthly Health Report",
-    "status_label": "Draft with blockers",
+    "status_label": "Draft for review",
     "output_root": "outputs/monthly_report"
   },
   "email": {
@@ -71,5 +71,9 @@
       "title": "RAG Mix by Workstream",
       "filename": "rag_mix.png"
     }
-  ]
+  ],
+  "validation": {
+    "mode": "report",
+    "_comment": "report = data problems are notes, report is always produced; strict = they block the package"
+  }
 }

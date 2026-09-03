@@ -32,7 +32,7 @@ class MonthlyReportAutomationTests(unittest.TestCase):
 
     def test_validation_uses_demo_cutoff_and_marks_draft_blockers(self) -> None:
         data_pack = load_data_pack(DEMO_WORKBOOK)
-        validation = validate_data_pack(data_pack, period="2026-04", brand_logo_path=LOGO)
+        validation = validate_data_pack(data_pack, period="2026-04", brand_logo_path=LOGO, mode="strict")
         self.assertEqual(validation["report_as_of"], "2026-04-30")
         self.assertEqual(validation["report_status"], "Draft with blockers")
         blocker_ids = {issue["id"] for issue in validation["issues"] if issue["severity"] == "blocker"}
@@ -48,7 +48,7 @@ class MonthlyReportAutomationTests(unittest.TestCase):
                 output_root=temp_dir,
             )
             output_dir = Path(result["output_dir"])
-            self.assertEqual(result["status"], "Draft with blockers")
+            self.assertEqual(result["status"], "Draft for review")
             for label in ("markdown", "html", "pdf", "metrics", "review_gates"):
                 path = Path(result["outputs"][label])
                 self.assertTrue(path.exists(), label)
@@ -69,7 +69,7 @@ class MonthlyReportAutomationTests(unittest.TestCase):
 
             metrics = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
             self.assertEqual(metrics["meta"]["report_as_of"], "2026-04-30")
-            self.assertGreaterEqual(metrics["validation"]["issue_counts"]["blocker"], 1)
+            self.assertGreaterEqual(metrics["validation"]["issue_counts"]["data_note"], 1)
 
             for chart in result["charts"].values():
                 chart_path = Path(chart["path"])
@@ -95,12 +95,12 @@ class MonthlyReportAutomationTests(unittest.TestCase):
             )
             self.assertEqual(manifest["to"], ["director@example.com"])
             self.assertEqual(manifest["cc"], ["pm@example.com"])
-            self.assertFalse(manifest["send_allowed_without_override"])
+            self.assertTrue(manifest["send_allowed_without_override"])  # report mode: no blockers; --send-approved still required
             self.assertTrue(Path(manifest["draft_paths"]["markdown"]).exists())
             self.assertTrue(Path(manifest["draft_paths"]["html"]).exists())
             self.assertTrue(Path(manifest["draft_paths"]["eml"]).exists())
             draft = Path(manifest["draft_paths"]["markdown"]).read_text(encoding="utf-8")
-            self.assertIn("Draft with blockers", draft)
+            self.assertIn("Draft for review", draft)
             self.assertIn("Do not issue externally", draft)
             with self.assertRaisesRegex(RuntimeError, "--send-approved"):
                 send_report_email(result["output_dir"], CONFIG, to_addresses=["director@example.com"])

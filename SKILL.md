@@ -25,7 +25,7 @@ SOP（人做法）：`workflows/monthly_report_sop.md`
 2. **絕不代發。** 唔會 email、發布、派發任何 output。`send_report_email.py` 有 blocker 就拒絕；就算冇 blocker，都只可以由人行。
 3. **缺值只可標示，唔可推斷。** 空格係 Data Gap，唔係一個你估返嚟嘅數。
 4. **`input/` 同 `tools/` 只讀。** 只寫入 `outputs/`。
-5. **Blocker 先係產品。** 揭示邊度錯、邊個要幾時修，比一份靚報告更有價值。
+5. **報告一定出到。** 數據矛盾（例如公式對唔上、連結 ID 唔存在）會記做 data notes 列喺報告入面，唔會阻止出報告、唔使問人點處理。只有結構問題（成個 sheet / column 唔見咗）先會停。
 6. **最終交付係 PDF。** 決定人拎住嘅係 `monthly_report_premium.pdf`（dashboard）同 `monthly_report.pdf`（敘述報告）。
 7. **唔好安裝任何嘢。** 唔好 `pip install`、唔好 download、唔好問人批准下載。如果 `export_premium_pdf.py` 話環境冇 Chrome / Edge，就以 `monthly_report.pdf`（reportlab）做 PDF 交付、dashboard 留 HTML，並喺回報講明。
 
@@ -34,7 +34,7 @@ SOP（人做法）：`workflows/monthly_report_sop.md`
 | # | Verb | Tool | Input → Output |
 |---|------|------|----------------|
 | 1 | LOAD | `tools/load_data_pack.py` | `input/*.xlsx` → sheets（記憶體） |
-| 2 | VALIDATE | `tools/validate_data_pack.py` | sheets → `review_gate_status.json`（blocker / warning） |
+| 2 | VALIDATE | `tools/validate_data_pack.py` | sheets → `review_gate_status.json`（data notes / warnings；`strict` 模式先有 blocker） |
 | 3 | KPI | `tools/calculate_monthly_kpis.py` | sheets → `metrics.json`（KPI + 整體 RAG） |
 | 4 | CHARTS | `tools/generate_report_charts.py` | metrics → `assets/*.png` |
 | 5 | DRAFT | `tools/render_monthly_report.py` | metrics + charts → `monthly_report.md / .html / .pdf` |
@@ -52,17 +52,18 @@ SOP（人做法）：`workflows/monthly_report_sop.md`
 Input：`input/` 入面嘅資料包（一個 `.xlsx`）。期間格式 `YYYY-MM`。由 repo root 行。
 
 1. `python tools/run_monthly_report.py --input "input/<pack>.xlsx" --period <YYYY-MM>`
-   — LOAD → VALIDATE → KPI → CHARTS → DRAFT → EMAIL DRAFT；出 `monthly_report.pdf`；terminal 印 blocker / warning 數。
+   — LOAD → VALIDATE → KPI → CHARTS → DRAFT → EMAIL DRAFT；出 `monthly_report.pdf`；terminal 印 data notes / warning 數同 status（預期 `Draft for review`）。
 2. `python tools/generate_premium_html_report.py --input "input/<pack>.xlsx" --period <YYYY-MM>`
    — 出 `monthly_report_premium.html`（OpenDeedigital 品牌 dashboard）。
 3. `python tools/visual_qa_report.py --report-dir outputs/monthly_report/<period> --simulate`
    — 逐張內嵌圖表 QA。
 4. `python tools/export_premium_pdf.py --report-dir outputs/monthly_report/<period>`
    — 出 **`monthly_report_premium.pdf`**。
-5. 停。回報：行咗邊啲 tool、blocker 同 warning 數、整體 RAG 狀態、**兩份 PDF 嘅完整路徑**。唔好開、唔好送、唔好改其他嘢。
+5. 停。回報：行咗邊啲 tool、data notes 同 warning 數、整體 RAG 狀態、**兩份 PDF 嘅完整路徑**。唔好開、唔好送、唔好改其他嘢。
 
-如果被要求送出報告：行 `python tools/send_report_email.py --report-dir outputs/monthly_report/<period> --to <address> --send-approved`，
-原文顯示佢嘅拒絕訊息，解釋要由人先清 blocker。永遠唔用 `--override-blockers`。
+如果被要求送出報告：**唔好送**。回覆：報告係 DRAFT，由具名審核人睇完自行發出；`send_report_email.py` 只可以由人行。
+
+嚴格模式（真實項目、要 blocker 把關）：`config/report_sections.json` 設 `"validation": {"mode": "strict"}`，或行 tool 前設 `MONTHLY_REPORT_MODE=strict` —— 數據矛盾會變 blocker，status 變 `Draft with blockers`，send gate 會拒絕。
 
 ## Gate 關卡
 

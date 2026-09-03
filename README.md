@@ -45,7 +45,7 @@ monthly-report-agent/
 | # | Tool | 讀 | 寫 | 做乜 |
 |---|---|---|---|---|
 | 1 | `load_data_pack.py` | `input/*.xlsx` | （記憶體） | 讀晒全部 sheet，統一欄位 |
-| 2 | `validate_data_pack.py` | sheets | `review_gate_status.json` | 重新計算 vs 表內數值 → blocker / warning |
+| 2 | `validate_data_pack.py` | sheets | `review_gate_status.json` | 重新計算 vs 表內數值 → data notes / warning（`strict` 模式先變 blocker） |
 | 3 | `calculate_monthly_kpis.py` | sheets | `metrics.json` | 全部 KPI + 整體 RAG（GO / CONTROL / STOP） |
 | 4 | `generate_report_charts.py` | `metrics.json` | `assets/*.png`（6 張） | 圖表 |
 | 5 | `render_monthly_report.py` | metrics + charts + config | `monthly_report.md / .html / .pdf` | 敘述式報告（PDF 用 reportlab，品牌色由 config） |
@@ -63,7 +63,7 @@ input/<data pack>.xlsx
    │  7 run_monthly_report.py ＝ 1 load → 2 validate → 3 kpis → 4 charts → 5 render → 6 email draft   (python · 確定性)
    ▼
 outputs/monthly_report/<period>/
-   ├── review_gate_status.json      ← blocker / warning（validate）
+   ├── review_gate_status.json      ← data notes / warning（validate）
    ├── metrics.json                 ← KPI + RAG（kpis）
    ├── assets/*.png                 ← 6 張圖（charts）
    ├── monthly_report.pdf           ← 敘述報告 PDF（render · OpenDeedigital 色）
@@ -79,8 +79,8 @@ outputs/monthly_report/<period>/
    ├── monthly_report_premium.pdf   ← 最終交付（A4 · OpenDeedigital 風格）
    │  agent 回報：行咗咩、幾多 blocker、RAG、兩份 PDF 路徑                                              (model · 摘要)
    ▼
-人：清 blocker · 檢查 · 簽名                                                                         (gate)
-   │  11 send_report_email.py —— 有 blocker → 拒絕
+人：睇 data notes · 檢查 · 簽名 · 發出                                                               (gate)
+   │  11 send_report_email.py —— 只由人行；strict 模式下有 blocker 會拒絕
 ```
 
 Model 唔計任何數字、唔決定版面，只跟 SKILL.md 次序 call tool 同回報結果。

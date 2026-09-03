@@ -57,7 +57,7 @@ def run_monthly_report(
     resolved_input = resolve_input_path(input_path)
     data_pack = load_data_pack(resolved_input)
     logo_path = config.get("brand", {}).get("logo_path")
-    validation = validate_data_pack(data_pack, period=period, report_as_of=report_as_of, brand_logo_path=logo_path)
+    validation = validate_data_pack(data_pack, period=period, report_as_of=report_as_of, brand_logo_path=logo_path, mode=(config.get("validation", {}) or {}).get("mode"))
     report_model = calculate_monthly_kpis(data_pack, validation)
     output_dir = build_output_dir(config, period, validation.get("report_as_of"), output_root)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -111,7 +111,9 @@ def main() -> int:
         print(f"email eml: {result['email']['draft_paths']['eml']}")
     blockers = result["validation"].get("issue_counts", {}).get("blocker", 0)
     warnings = result["validation"].get("issue_counts", {}).get("warning", 0)
-    print(f"validation: {blockers} blocker(s), {warnings} warning(s)")
+    notes = result["validation"].get("issue_counts", {}).get("data_note", 0)
+    status = result["validation"].get("report_status")
+    print(f"validation: {blockers} blocker(s), {warnings} warning(s) incl. {notes} data note(s) -- status: {status}")
     return 0
 
 
