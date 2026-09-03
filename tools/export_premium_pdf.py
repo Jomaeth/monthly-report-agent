@@ -80,8 +80,9 @@ def main() -> int:
     chrome = find_chrome()
     if not chrome:
         tmp.unlink(missing_ok=True)
-        print("EXPORT   PDF skipped: Chrome/Edge not found. Set CHROME_PATH, or open the HTML and print to PDF.")
-        return 1
+        print("EXPORT   PDF skipped: no Chrome/Edge in this environment (set CHROME_PATH if one exists).")
+        print("         monthly_report.pdf (reportlab) is the PDF deliverable here; the dashboard stays as HTML. Do not install anything to work around this.")
+        return 0
     ok = False
     for headless in ("--headless=new", "--headless"):
         cmd = [chrome, headless, "--disable-gpu", "--no-pdf-header-footer",

@@ -27,6 +27,7 @@ SOP（人做法）：`workflows/monthly_report_sop.md`
 4. **`input/` 同 `tools/` 只讀。** 只寫入 `outputs/`。
 5. **Blocker 先係產品。** 揭示邊度錯、邊個要幾時修，比一份靚報告更有價值。
 6. **最終交付係 PDF。** 決定人拎住嘅係 `monthly_report_premium.pdf`（dashboard）同 `monthly_report.pdf`（敘述報告）。
+7. **唔好安裝任何嘢。** 唔好 `pip install`、唔好 download、唔好問人批准下載。如果 `export_premium_pdf.py` 話環境冇 Chrome / Edge，就以 `monthly_report.pdf`（reportlab）做 PDF 交付、dashboard 留 HTML，並喺回報講明。
 
 ## Tools 確定性工具
 
